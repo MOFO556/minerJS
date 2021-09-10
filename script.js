@@ -79,9 +79,75 @@ class minerModel	{
   
 }
 
+class minerGUI  {
+	constructor(width, height, mines)	{
+		this.width = width;
+		this.height = height;
+		this.mines = countMines(width, height, mines);
+	};
+  
+	drawField()	{
+		let model = new minerModel(this.width,this.height,this.mines)
+		let table = document.createElement('table');    
+		let rows, cells;
+		table.className = "field";
+		table.id = "minerField";
+		model.convertToModel();    
+
+		for (let i = 0; i < this.height; i++)  {      
+			rows = table.insertRow(i);
+			rows.id = i;
+			for (let j = 0; j < this.width; j++) {        
+				cells = rows.insertCell(j);
+				cells.className = "closed"
+				cells.id = j;
+
+				cells.addEventListener('click',
+							function(){
+							let cellId = event.target.getAttribute('id');
+							let rowId = event.target.parentNode.getAttribute('id');
+							openCell(rowId,cellId,this,event.type);
+							});
+
+				cells.addEventListener('contextmenu',
+							function(){
+							event.preventDefault();
+							openCell(...Array(2),this,event.type);
+							})
+			}
+		}
+		document.body.append(table);
+
+		function openCell(i, j, clickedCell, eventType)  {
+			
+		  if (!clickedCell.classList.contains('flag') && !clickedCell.classList.contains('question') && (eventType==='click')) {        
+			  clickedCell.classList.remove("closed");
+			  if (Number.isInteger(model.field[i][j]) )  {
+			  clickedCell.textContent = model.field[i][j];
+			}
+			else if (model.field[i][j] === 'mine')  {
+			  clickedCell.classList.add("bomb");
+			}
+		  }
+		  else {
+			if (clickedCell.classList.contains('flag')) {
+			  clickedCell.classList.remove("flag");
+			  clickedCell.classList.add("question");
+			}
+			else if (clickedCell.classList.contains('question'))  {
+			  clickedCell.classList.remove("question");
+			}
+			else  { clickedCell.classList.add("flag");  }
+		  }
+
+		}    
+	}
+}
+
 function countMines	(width, height, mines)	{
 	return	((width * height > mines) ? mines : width * height - 1);
 }
+
 
 
    
