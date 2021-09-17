@@ -6,6 +6,26 @@
 </head>
 
 <body>
-<script src="script.js"></script>
+  <div>
+    
+  </div>
+  <div class="gameWrap" id="gameWrapper">
+    <div class="menu">
+      <button class="pressed" id="easy">Easy</button>
+      <button id="normal">Normal</button>
+      <button id="hard">Hard</button>      
+      <div class="gameUpdate newGame" id="updateGame"></div>
+	</div>
+	<div class="menu">
+		<input placeholder="width" type="number" class="integerInput" onkeypress="if (this.value.length > 1) return false;" id="widthInput">
+		<input placeholder="height" type="number" class="integerInput" onkeypress="if (this.value.length > 1) return false;" id="heightInput">
+		<input placeholder="mines" type="number" class="integerInput" onkeypress="if (this.value.length > 2) return false;" id="minesInput">
+		<button id="custom">Custom</button>
+	</div>
+  </div>
+
+  
+
 </body>
+<script src="script.js"></script>
 </html>

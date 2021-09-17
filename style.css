@@ -1,3 +1,66 @@
+.gameWrap {
+    display: block;
+    padding: 7px;
+    background: #bdbdbd;
+    border-bottom: solid 2px #707070;
+    border-right: solid 2px #707070;
+    border-top: solid 2px #fff;
+    border-left: solid 2px #fff;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    border-radius: 3px;
+    text-align:center;
+    margin: 0 auto;
+    width: 238px;
+}
+
+.menu {
+  margin: 5px auto;
+  text-align: center;
+  background: #bdbdbd;
+  display: inline-block;
+  border-bottom: solid 2px #fff;
+  border-right: solid 2px #fff;
+  border-top: solid 2px #7b7b7b;
+  border-left: solid 2px #7b7b7b;
+  white-space: nowrap;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;  
+  
+}
+
+.menu input {
+  width: 40px;
+  text-align: center;
+  padding: 2px 5px;
+  outline: none;
+}
+
+.menu input.text:focus {
+  border: none;
+}
+
+.menu button {
+  width: 60px;
+  text-align: center;
+  background: #bdbdbd;
+  display: inline-block;
+  border-top: solid 4px #fff;
+  border-left: solid 3px #fff;
+  border-bottom: solid 4px #7b7b7b;
+  border-right: solid 3px #7b7b7b; 
+}
+
+.pressed {
+    border-style: unset!important;
+    font-weight: 700!important;
+    padding: 5px 2px;
+}
+
 .field  {
     border-collapse: seperate;
     border-spacing: 0;
@@ -5,11 +68,18 @@
     border-right: solid 2px #fff;
     border-top: solid 2px #7b7b7b;
     border-left: solid 2px #7b7b7b;
+    margin: 0 auto;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;    
 }
 
 .field td{
-    width: 20px;
-    height: 20px;
+    width: 21px;
+    height: 21px;
     margin: 0;
     padding: 0 0 0 3px;
     font-weight: 700;
@@ -32,6 +102,13 @@
     border-left: solid 2px #fff;
 }
 
+.empty  {
+    border-left: solid 1px #333;
+    border-top: solid 1px #333;
+    border-bottom: solid 1px #666;
+    border-right: solid 1px #666;
+}
+
 .flag:after {
   color: #b00000;
   content: '\1F6A9';
@@ -47,4 +124,39 @@
   content: '\1F4A3';
   color: #b00000;
   margin: 0 0 0 -2px;
+}
+
+.menu input::-webkit-outer-spin-button,
+.menu input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.gameUpdate {
+  width: 21px;
+  display: inline-block;
+  border-top: solid 2px #fff;
+  border-left: solid 2px #fff;
+  border-bottom: solid 1px #7b7b7b;
+  border-right: solid 1px #7b7b7b;
+  vertical-align: middle;
+  text-align: center;
+  font-weight: bolder;
+  margin-left: 7px;
+  margin-right: 10px;
+}
+
+.newGame:after {
+  content: '\1F60A';
+  color: black;
+}
+
+.winGame:after  {
+  content: '\1F60E';
+  color: green;  
+}
+
+.faleGame:after {
+  content: '\1F635';
+  color: red; 
 }
