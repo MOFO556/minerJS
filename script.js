@@ -88,7 +88,7 @@ class minerGUI  {
 
 
 	drawWrap()  { 
-      document.getElementById("gameWrapper").style.width = (((this.width*20) >= 240) ? (this.width*20) : 250) + "px"
+      document.getElementById("gameWrapper").style.width = (((this.width*21) >= 240) ? (this.width*21+20) : 250) + "px"
 	}
 
 	drawField()	{    
@@ -99,7 +99,7 @@ class minerGUI  {
       }
     else  {
       document.getElementById("minerField").replaceWith(table);
-    } /*ПОДУМАТЬ НАД ОБНОВЛЕНИЕМ МОДЕЛИ*/
+    }
 
     function createField(width, height, mines, model)  {
       let table = document.createElement('table');    
@@ -116,27 +116,28 @@ class minerGUI  {
           cells.className = "closed"
           cells.id = j;
 
-          cells.onclick = (event) => leftClick(event, model);
-          cells.oncontextmenu = (event) => rightClick(event, model);
+          cells.onclick = (event) => leftClick(event, model, mines);
+          cells.oncontextmenu = (event) => rightClick(event, model, mines);
         }
       }
       return table;
     }
     
-    function leftClick(event, model){
+    function leftClick(event, model, mines){
       let cellId = event.target.getAttribute('id');
       let rowId = event.target.parentNode.getAttribute('id');
-      openCell(rowId,cellId,event.type,model);
+      openCell(rowId,cellId,event.type,model, mines);
     };
     
-     function rightClick(event, model){          
+     function rightClick(event, model, mines){          
       let cellId = event.target.getAttribute('id');
       let rowId = event.target.parentNode.getAttribute('id');
       event.preventDefault();
-      openCell(rowId,cellId,event.type,model);
+      openCell(rowId,cellId,event.type,model, mines);
     };
     
-		function openCell(i, j, eventType, model)  {
+		function openCell(i, j, eventType, model, mines)  {
+      let minesLeft = document.getElementById("minesLeft")
 			let table = document.getElementById('minerField');
 			i = parseInt(i);
 			j = parseInt(j);
@@ -160,9 +161,9 @@ class minerGUI  {
 						openCell(i+1, j,   'click', model);
 						openCell(i+1, j+1, 'click', model);
 						openCell(i+1, j-1, 'click', model);
-						openCell(i,   j-1, 'click', model);              
+						openCell(i,   j-1, 'click', model);
 						openCell(i,   j+1, 'click', model);
-						openCell(i-1, j+1, 'click', model);              
+						openCell(i-1, j+1, 'click', model);
 						openCell(i-1, j-1, 'click', model);
 						openCell(i-1, j,   'click', model);
 						return;
@@ -174,34 +175,51 @@ class minerGUI  {
           clickedCell.style.background= "#ff4c5b";
           gameOver(model);
 					return;
-					//вызов окончания игры
 				}
 			}
 			else {
 				if (clickedCell.classList.contains('flag')) {
 					clickedCell.classList.remove("flag");
 					clickedCell.classList.add("question");
+          minesLeft.textContent++;          
 				}
 				else if (clickedCell.classList.contains('question'))  {
 					clickedCell.classList.remove("question");
 				}
-				else  { clickedCell.classList.add("flag");  }
+				else  { 
+          clickedCell.classList.add("flag");
+          minesLeft.textContent--;
+          if (minesLeft.textContent === "0")
+          {          
+            gameOver(false,mines);
+            return;   
+          }          
+        }
 			}
 		}
     
-    function gameOver(model) {
+    function gameOver(model,mines) {
       let smile = document.getElementById('updateGame');
       let table = document.getElementById('minerField');
-      smile.classList.remove('newGame');
-      smile.classList.add('faleGame');
-
+      let minesLeft = document.getElementById("minesLeft");
+      let cellsLeft = table.rows.length * table.rows[0].cells.length; 
       for (let i = 0; i < table.rows.length; i++)  { 
-        for (let j = 0; j < table.rows[0].cells.length; j++) {  
-          table.rows[i].cells[j].onclick = null;
-          table.rows[i].cells[j].oncontextmenu = (event) => event.preventDefault(); 
-          if (model.field[i][j] === 'mine') {
-            table.rows[i].cells[j].classList.add("bomb");
-            table.rows[i].cells[j].classList.add("empty");
+        for (let j = 0; j < table.rows[0].cells.length; j++) {
+          if (model  !== false)  {
+            table.rows[i].cells[j].onclick = null;
+            table.rows[i].cells[j].oncontextmenu = (event) => event.preventDefault(); 
+            if ((mines!==false) && (model.field[i][j] === 'mine')) {
+              smile.classList.remove('newGame');
+              table.rows[i].cells[j].classList.add("bomb");
+              table.rows[i].cells[j].classList.add("empty");
+              smile.classList.add('faleGame');
+            }
+           } 
+          cellsLeft = ((table.rows[i].cells[j].classList.contains("empty")) ? (cellsLeft-1)  : cellsLeft)
+          if ((minesLeft.textContent === "0") &&  ((cellsLeft-parseInt(mines)) ===  parseInt(mines)))  {            
+            smile.classList.remove('newGame');
+            smile.classList.add('winGame');
+            gameOver(true,false)
           }
         }
       }
@@ -284,26 +302,43 @@ class game  {
 }
 
 function refreshGame()  {
-    let newgame = new game();
-    let parametres = newgame.difficultyChange();
-    let GUI = new minerGUI(parametres[0],parametres[1],parametres[2]);
-    GUI.drawWrap();
-    GUI.drawField();
-    let smile = document.getElementById("updateGame")
-    if (smile.classList.contains('winGame')) {
-      smile.classList.remove('winGame');
-      smile.classList.add('newGame');
-    }
-    else if (smile.classList.contains('faleGame')) {
-      smile.classList.remove('faleGame');
-      smile.classList.add('newGame');
-    }
-  } 
+  let newgame = new game();
+  let parametres = newgame.difficultyChange();
+  let GUI = new minerGUI(parametres[0],parametres[1],parametres[2]);
+  GUI.drawWrap();
+  GUI.drawField();  
+  let minesLeft = document.getElementById("minesLeft")
+  minesLeft.textContent = parametres[2]
+  let smile = document.getElementById("updateGame")
+  if (smile.classList.contains('winGame')) {
+    smile.classList.remove('winGame');
+    smile.classList.add('newGame');
+  }
+  else if (smile.classList.contains('faleGame')) {
+    smile.classList.remove('faleGame');
+    smile.classList.add('newGame');
+  }
+} 
+
+
+function hideInfo()  {
+  let infoWindow = document.getElementById("infoBlock");
+  if (infoWindow.style.display === "block") {infoWindow.style.display = "none";}
+}
 
 
 document.addEventListener("DOMContentLoaded",(event) => {      
-    refreshGame();
-    disableCustom();        
-    let smile = document.getElementById("updateGame")
-    smile.onclick = (event) => refreshGame();
+	refreshGame();
+	disableCustom();        
+	let smile = document.getElementById("updateGame")
+	smile.onclick = (event) => refreshGame();
+	let infoButton =  document.getElementById("infoButton")
+	infoButton.onclick = function(){
+			let infoBlock =  document.getElementById("infoBlock")
+			if (infoBlock.style.display === "none") {
+				infoBlock.style.display = "block";
+				let infoText =  document.getElementById("infoText")
+        infoText.addEventListener("click",hideInfo,true);
+			}       
+		}
 });

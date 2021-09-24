@@ -1,5 +1,6 @@
 .gameWrap {
     display: block;
+    position: relative;
     padding: 7px;
     background: #bdbdbd;
     border-bottom: solid 2px #707070;
@@ -9,28 +10,42 @@
     -webkit-border-radius: 3px;
     -moz-border-radius: 3px;
     border-radius: 3px;
-    text-align:center;
     margin: 0 auto;
     width: 238px;
+    white-space: nowrap;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;  
+}
+
+.infoButton {
+  cursor:help;
+  display:block;
+  margin: 0 0 3px auto;
+  width:18px;
+  height:18px;
+  text-align:center;
+  vertical-align: middle;
+  border-bottom: solid 2px #707070;
+  border-right: solid 2px #707070;
+  border-top: solid 2px #fff;
+  border-left: solid 2px #fff;
+  font-weight: bold;
 }
 
 .menu {
   margin: 5px auto;
   text-align: center;
   background: #bdbdbd;
-  display: inline-block;
+  display: block;
+  width:240px;
   border-bottom: solid 2px #fff;
   border-right: solid 2px #fff;
   border-top: solid 2px #7b7b7b;
-  border-left: solid 2px #7b7b7b;
-  white-space: nowrap;
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  -khtml-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;  
-  
+  border-left: solid 2px #7b7b7b;  
 }
 
 .menu input {
@@ -45,6 +60,7 @@
 }
 
 .menu button {
+  cursor:pointer;
   width: 60px;
   text-align: center;
   background: #bdbdbd;
@@ -56,19 +72,28 @@
 }
 
 .pressed {
+    cursor:unset!important;
     border-style: unset!important;
     font-weight: 700!important;
     padding: 5px 2px;
 }
 
+.field tbpdy  {
+  
+    table-layout: fixed;
+}
+
 .field  {
+    table-layout: fixed;
     border-collapse: seperate;
     border-spacing: 0;
     border-bottom: solid 2px #fff;
     border-right: solid 2px #fff;
     border-top: solid 2px #7b7b7b;
     border-left: solid 2px #7b7b7b;
-    margin: 0 auto;
+    margin: 5px auto;
+    text-align:center;
+    vertical-align: middle;
     -webkit-touch-callout: none;
     -webkit-user-select: none;
     -khtml-user-select: none;
@@ -78,14 +103,15 @@
 }
 
 .field td{
+    display:inline-block;
     width: 21px;
     height: 21px;
     margin: 0;
-    padding: 0 0 0 3px;
     font-weight: 700;
     font-family: 'Arial Black',Arial,sans-serif;
     font-size: 16px;
     line-height: 16px;
+    text-align: center;
     vertical-align: middle;
     cursor: default;
     -webkit-box-sizing: border-box;
@@ -96,6 +122,8 @@
 }
 
 .closed {
+    width: 23px;
+    height: 23px;
     border-bottom: solid 2px #7b7b7b;
     border-right: solid 2px #7b7b7b;
     border-top: solid 2px #fff;
@@ -103,16 +131,19 @@
 }
 
 .empty  {
+    width: 23px;
+    height: 23px;
     border-left: solid 1px #333;
     border-top: solid 1px #333;
     border-bottom: solid 1px #666;
     border-right: solid 1px #666;
 }
 
+
+
 .flag:after {
-  color: #b00000;
   content: '\1F6A9';
-  margin: 0 0 0 -3px;
+  color: #b00000;  
 }
 
 .question:after {
@@ -123,7 +154,10 @@
 .bomb:after {
   content: '\1F4A3';
   color: #b00000;
-  margin: 0 0 0 -2px;
+}
+
+.bomb {
+  padding-top:4px;
 }
 
 .menu input::-webkit-outer-spin-button,
@@ -133,12 +167,13 @@
 }
 
 .gameUpdate {
-  width: 21px;
+  cursor:pointer;
+  width: 18px;
   display: inline-block;
   border-top: solid 2px #fff;
   border-left: solid 2px #fff;
-  border-bottom: solid 1px #7b7b7b;
-  border-right: solid 1px #7b7b7b;
+  border-bottom: solid 2px #7b7b7b;
+  border-right: solid 2px #7b7b7b;
   vertical-align: middle;
   text-align: center;
   font-weight: bolder;
@@ -159,4 +194,57 @@
 .faleGame:after {
   content: '\1F635';
   color: red; 
+}
+
+.infoBlock {    
+    position:fixed;
+    left:0;
+    top:0;
+    width:100%;
+    height:100%;
+    z-index:100000;
+    cursor:pointer;
+}
+
+
+.infoBlock .fon {
+    background: #f6fcff;
+    opacity:.8;
+    position:fixed;
+    width:100%;
+    height:100%;
+    cursor: default;
+}
+.infoBlock .infoText {
+    box-sizing: border-box;  
+    padding:10px 20px;
+    border: 2px solid #aeaeae;
+    background: #f6fcff;
+    position:fixed;
+    margin: 0 auto;
+    top:5em;
+    left: 0;
+    right: 0;
+    width:25em;
+    box-shadow: 0 4px 10px 2px rgba(0,0,0,0.5);
+}        
+.closeblock {
+    display:block;
+    margin: -8px -18px 13px auto;
+    width:18px;
+    height:18px;
+    text-align:center;
+    vertical-align: middle;
+    font-size: 23px;
+    font-weight: bold;
+    cursor:pointer;
+    transform: rotate(45deg);
+    text-align:center;
+    color: #000000;
+}
+.closeblock:after {
+    content: "+";   
+}
+.closeblock:hover {
+    color: #aeaeae;    
 }

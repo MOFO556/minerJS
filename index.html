@@ -10,6 +10,7 @@
     
   </div>
   <div class="gameWrap" id="gameWrapper">
+    <div class="infoButton" id="infoButton">?</div>
     <div class="menu">
       <button class="pressed" id="easy">Easy</button>
       <button id="normal">Normal</button>
@@ -17,14 +18,23 @@
       <div class="gameUpdate newGame" id="updateGame"></div>
 	</div>
 	<div class="menu">
-		<input placeholder="width" type="number" class="integerInput" onkeypress="if (this.value.length > 1) return false;" id="widthInput">
-		<input placeholder="height" type="number" class="integerInput" onkeypress="if (this.value.length > 1) return false;" id="heightInput">
-		<input placeholder="mines" type="number" class="integerInput" onkeypress="if (this.value.length > 2) return false;" id="minesInput">
+		<input placeholder="width" type="number" onkeypress="if (this.value.length > 1) return false;" id="widthInput">
+		<input placeholder="height" type="number" onkeypress="if (this.value.length > 1) return false;" id="heightInput">
+		<input placeholder="mines" type="number" onkeypress="if (this.value.length > 2) return false;" id="minesInput">
 		<button id="custom">Custom</button>
 	</div>
+        <div class="integerInput" id="minesLeft">0</div>
   </div>
+  <div class="infoBlock"  id="infoBlock" style="display:none;">
+    <div class="fon"></div>    
+    <div class="infoText" id="infoText">
+      <div class="closeblock"></div>    
+      <p>Для старта новой игры:
+        <br>Выберите сложность и нажмите на мордашку</p>
+      <p>При пользовательских настройках необходимо очищать поля</p>
+    </div>
 
-  
+  </div>  
 
 </body>
 <script src="script.js"></script>
