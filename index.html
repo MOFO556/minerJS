@@ -23,7 +23,17 @@
 		<input placeholder="mines" type="number" onkeypress="if (this.value.length > 2) return false;" id="minesInput">
 		<button id="custom">Custom</button>
 	</div>
-        <div class="integerInput" id="minesLeft">0</div>
+    <div class="menu" id="inlineWrapper">
+      <div class="minesWrapper">
+        <span>Mines Left:</span>
+        <span id="minesLeft">0</span>
+      </div>
+      <div class="timeWrapper">
+          <span>Time:</span>
+          <span id="timeLeft">0</span>
+      </div>
+    </div>
+        
   </div>
   <div class="infoBlock"  id="infoBlock" style="display:none;">
     <div class="fon"></div>    

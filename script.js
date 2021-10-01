@@ -4,7 +4,7 @@ class minerModel	{
 	constructor(width, height, mines)	{
 		this.width = width;
 		this.height = height;
-		this.mines = countMines(width, height, mines);
+		this.mines = mines;
 		this.field = new Array(height*width).fill(0);
 		this.openedField = [];
 		this.gameFinished = false;
@@ -83,7 +83,7 @@ class minerGUI  {
 	constructor(width, height, mines )	{
 		this.width = width;
 		this.height = height;
-		this.mines = countMines(width, height, mines);
+		this.mines = mines;
 	};  
 
 
@@ -155,17 +155,16 @@ class minerGUI  {
 				if (Number.isInteger(model.field[i][j]))  {
 					if (model.field[i][j]>0)  {
 						clickedCell.textContent = model.field[i][j];
-						return;
 					}
-					else  {
-						openCell(i+1, j,   'click', model);
-						openCell(i+1, j+1, 'click', model);
-						openCell(i+1, j-1, 'click', model);
-						openCell(i,   j-1, 'click', model);
-						openCell(i,   j+1, 'click', model);
-						openCell(i-1, j+1, 'click', model);
-						openCell(i-1, j-1, 'click', model);
-						openCell(i-1, j,   'click', model);
+					else {
+						openCell(i+1, j,   'click', model, false);
+						openCell(i+1, j+1, 'click', model, false);
+						openCell(i+1, j-1, 'click', model, false);
+						openCell(i,   j-1, 'click', model, false);
+						openCell(i,   j+1, 'click', model, false);
+						openCell(i-1, j+1, 'click', model, false);
+						openCell(i-1, j-1, 'click', model, false);
+						openCell(i-1, j,   'click', model, false);
 						return;
 					}
 				}
@@ -177,25 +176,25 @@ class minerGUI  {
 					return;
 				}
 			}
-			else {
+			else if(mines) {
 				if (clickedCell.classList.contains('flag')) {
 					clickedCell.classList.remove("flag");
 					clickedCell.classList.add("question");
           minesLeft.textContent++;          
 				}
-				else if (clickedCell.classList.contains('question'))  {
+				else if (clickedCell.classList.contains('question') && (mines))  {
 					clickedCell.classList.remove("question");
 				}
 				else  { 
           clickedCell.classList.add("flag");
-          minesLeft.textContent--;
-          if (minesLeft.textContent === "0")
-          {          
-            gameOver(false,mines);
-            return;   
-          }          
+          minesLeft.textContent--;         
         }
 			}
+      if (minesLeft.textContent === "0")
+      {          
+        gameOver(false,mines);
+        return;   
+      }
 		}
     
     function gameOver(model,mines) {
@@ -216,7 +215,7 @@ class minerGUI  {
             }
            } 
           cellsLeft = ((table.rows[i].cells[j].classList.contains("empty")) ? (cellsLeft-1)  : cellsLeft)
-          if ((minesLeft.textContent === "0") &&  ((cellsLeft-parseInt(mines)) ===  parseInt(mines)))  {            
+          if ((minesLeft.textContent === "0") &&  (cellsLeft-parseInt(mines) ===  0))  {            
             smile.classList.remove('newGame');
             smile.classList.add('winGame');
             gameOver(true,false)
@@ -301,15 +300,16 @@ class game  {
   }
 }
 
-function refreshGame()  {
+function refreshGame(event)  {
   let newgame = new game();
   let parametres = newgame.difficultyChange();
-  let GUI = new minerGUI(parametres[0],parametres[1],parametres[2]);
+  let mines = countMines(parametres[0],parametres[1],parametres[2]);
+  let GUI = new minerGUI(parametres[0],parametres[1],mines);
   GUI.drawWrap();
-  GUI.drawField();  
-  let minesLeft = document.getElementById("minesLeft")
-  minesLeft.textContent = parametres[2]
-  let smile = document.getElementById("updateGame")
+  GUI.drawField();
+  let minesLeft = document.getElementById("minesLeft");
+  minesLeft.textContent = mines;
+  let smile = document.getElementById("updateGame");
   if (smile.classList.contains('winGame')) {
     smile.classList.remove('winGame');
     smile.classList.add('newGame');
@@ -327,12 +327,13 @@ function hideInfo()  {
 }
 
 
-document.addEventListener("DOMContentLoaded",(event) => {      
+
+document.addEventListener("DOMContentLoaded",(event) => {
 	refreshGame();
-	disableCustom();        
-	let smile = document.getElementById("updateGame")
-	smile.onclick = (event) => refreshGame();
-	let infoButton =  document.getElementById("infoButton")
+	disableCustom();
+	let smile = document.getElementById("updateGame");
+	smile.onclick = (event) => refreshGame(event);
+	let infoButton =  document.getElementById("infoButton");
 	infoButton.onclick = function(){
 			let infoBlock =  document.getElementById("infoBlock")
 			if (infoBlock.style.display === "none") {

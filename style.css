@@ -78,9 +78,31 @@
     padding: 5px 2px;
 }
 
-.field tbpdy  {
-  
-    table-layout: fixed;
+.timeWrapper, .minesWrapper {
+  padding: 4px;
+  display: inline-block;
+}
+
+.timeWrapper  {
+  text-align:right;
+}
+.minesWrapper  {
+  text-align:left;
+}
+
+#minesLeft, #timeLeft {
+    width:  33px;
+    text-align: center;
+    font-family: "Courier New",monospace;
+    font-weight: 700;
+    border-bottom: solid 2px #fff;
+    border-right: solid 2px #fff;
+    border-top: solid 2px #7b7b7b;
+    border-left: solid 2px #7b7b7b;
+    background: #333;
+    color: #25fe15;
+    padding: 2px;
+    
 }
 
 .field  {
