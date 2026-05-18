@@ -1,0 +1,50 @@
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ru">
+<head>
+	<title>Мой Сапёр</title>
+	<meta http-equiv="content-type" content="text/html;charset=utf-8" />
+<script defer src="script.js"></script></head>
+
+<body>
+  <div>
+    
+  </div>
+  <div class="gameWrap" id="gameWrapper">
+    <div class="infoButton" id="infoButton">?</div>
+    <div class="menu">
+      <button class="pressed" id="easy">Easy</button>
+      <button id="normal">Normal</button>
+      <button id="hard">Hard</button>      
+      <div class="gameUpdate newGame" id="updateGame"></div>
+	</div>
+	<div class="menu">
+		<input placeholder="width" type="number" onkeypress="if (this.value.length > 1) return false;" id="widthInput">
+		<input placeholder="height" type="number" onkeypress="if (this.value.length > 1) return false;" id="heightInput">
+		<input placeholder="mines" type="number" onkeypress="if (this.value.length > 2) return false;" id="minesInput">
+		<button id="custom">Custom</button>
+	</div>
+    <div class="menu" id="inlineWrapper">
+      <div class="minesWrapper">
+        <span>Mines Left:</span>
+        <span id="minesLeft">0</span>
+      </div>
+      <div class="timeWrapper">
+          <span>Time:</span>
+          <span id="timeLeft">0</span>
+      </div>
+    </div>
+        
+  </div>
+  <div class="infoBlock"  id="infoBlock" style="display:none;">
+    <div class="fon"></div>    
+    <div class="infoText" id="infoText">
+      <div class="closeblock"></div>    
+      <p>Для старта новой игры:
+        <br>Выберите сложность и нажмите на мордашку</p>
+      <p>При пользовательских настройках необходимо очищать поля</p>
+    </div>
+
+  </div>  
+
+</body>
+<script src="script.js"></script>
+</html>

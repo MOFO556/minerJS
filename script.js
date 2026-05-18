@@ -1,5 +1,7 @@
 'use strict';
 
+import './style.css';
+
 class minerModel	{
 	constructor(width, height, mines)	{
 		this.width = width;
