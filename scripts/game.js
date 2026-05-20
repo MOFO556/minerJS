@@ -1,7 +1,9 @@
+// TODO: Refactor - Название класса 'game' слишком общее, лучше переименовать
 export default class game {
   
   difficultyChange()  {
     let buttons = document.getElementsByTagName('button');
+    // TODO: Refactor - Неиспользуемые переменные (type, width, height, mines) должны быть удалены
     let type,width,height,mines;
     for (let button of buttons) { 
       button.addEventListener("click",(event) => {
@@ -12,13 +14,17 @@ export default class game {
           for (let uncative of unactives) {
             uncative.classList.remove("pressed");
           }        
-          disableCustom();
+          // TODO: BUG - disableCustom лежит в основном скрипте, нужно рефакторить
+          if (typeof disableCustom === 'function') {
+            disableCustom();
+          }
         }
       });
     }
     let parametres = this.difficultySet();
     return parametres;
   }
+  // TODO: Refactor - Название функции вводит в заблуждение (возвращает значения, а не устанавливает), лучше переименовать в 'getDifficultySettings'
   difficultySet() {
     let buttons = document.getElementsByTagName('button');
     let type,width,height,mines;
@@ -27,6 +33,8 @@ export default class game {
         type=button.id
       } 
     }
+      // TODO: Refactor - Switch case можно заменить на полиморфизм и использовать глоссарий
+      // TODO: Refactor - Хардкод значений сложностей (easy, normal, hard) лучше вынести в конфиг
       switch(type){
       case "easy":
         width = 9;
