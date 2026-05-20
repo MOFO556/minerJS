@@ -1,6 +1,8 @@
 import Glossary from "./glossary";
 
 export default class minerModel	{
+	
+  // TODO: Добавить валидацию входных параметров (количество мин > площади поля, минимум 1 мина, минимум 2x2 поле)
 	constructor(width, height, mines)	{
 		this.width = width;
 		this.height = height;
@@ -12,7 +14,9 @@ export default class minerModel	{
 
 	minesInit(minedField)	{
 		let minesNumber = this.mines;
-		let fieldSpace = this.height*this.width;
+		let fieldSpace = this.height*this.width;		
+  		// TODO: BUG - minesInit Баг с бесконечной рекурсией: создаётся `new minesSet()` но minesSet это функция, а не класс		
+  		// TODO: BUG - minesInit не использует параметр minedField корректно - создаёт новый массив вместо использования переданного
 		this.field = new minesSet();
 
 		function minesSet()	{
@@ -33,6 +37,7 @@ export default class minerModel	{
 		}    
 	}
   
+  // TODO: Refactor - fieldTransformation не совсем очевидно назначение функции (приведение плоского массива к 2D)
 	fieldTransformation() {
 		this.minesInit(this.field);    
 		for (let i = 0; i < this.height; i++) {
