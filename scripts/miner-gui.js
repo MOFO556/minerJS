@@ -3,6 +3,7 @@ import Glossary from './glossary';
 import minerModel from './miner-model';
 
 export default class minerGUI  {
+	// TODO: Добавить валидацию входных параметров (количество мин > площади поля, минимум 1 мина, минимум 2x2 поле)
 	constructor(width, height, mines )	{
 		this.width = width;
 		this.height = height;
@@ -10,10 +11,12 @@ export default class minerGUI  {
 	};  
 
 
+	// TODO: Refactor - Магические цифры (21, 240, 250, 20) должны быть связаны с CSS
 	drawWrap()  { 
       document.getElementById("gameWrapper").style.width = (((this.width*21) >= 240) ? (this.width*21+20) : 250) + "px"
 	}
 
+	// TODO: Refactor - drawField большая функция, должна быть разбита на более мелкие
 	drawField()	{    
       let model = new minerModel(this.width,this.height,this.mines)
       let table = createField(this.width,this.height,this.mines, model);
@@ -59,6 +62,7 @@ export default class minerGUI  {
       openCell(rowId,cellId,event.type,model, mines);
     };
     
+		// TODO: Refactor - openCell функция слишком сложная, должна изолировать подфункции (логика авто-открытия)
 		function openCell(i, j, eventType, model, mines)  {
       let minesLeft = document.getElementById("minesLeft")
 			let table = document.getElementById('minerField');
@@ -120,6 +124,7 @@ export default class minerGUI  {
       }
 		}
     
+    // TODO: Refactor - gameOver функция слишком сложная, логика победы должна быть изолирована
     function gameOver(model,mines) {
       let smile = document.getElementById('updateGame');
       let table = document.getElementById('minerField');

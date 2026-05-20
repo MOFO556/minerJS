@@ -91,7 +91,7 @@ describe('minerModel', () => {
       const model = new minerModel(3, 3, 2);
       const testField = new Array(9).fill(0);
       
-      // Вызвает бесконечную рекурсию `new minesSet()` where minesSet is a function
+      // Вызывает бесконечную рекурсию `new minesSet()` где minesSet это функция
       // Баг вызывает RangeError: Maximum call stack size exceeded
       expect(true).toBe(true);
     });
@@ -281,11 +281,11 @@ describe('minerModel', () => {
       
       model.convertToModel();
       
-      // Check structure
+      // Проверка структуры
       expect(model.field).toHaveLength(5);
       expect(model.field[0]).toHaveLength(5);
       
-      // Check that mines exist
+      // Проверка что мины существуют
       let mineCount = 0;
       model.field.forEach(row => {
         row.forEach(cell => {
@@ -294,7 +294,7 @@ describe('minerModel', () => {
       });
       expect(mineCount).toBe(5);
       
-      // Check that non-mine cells are numbers
+      // Проверка что не минные ячейки это числа
       model.field.forEach(row => {
         row.forEach(cell => {
           if (cell !== Glossary.mineFieldName) {
