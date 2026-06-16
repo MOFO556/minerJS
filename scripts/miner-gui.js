@@ -1,155 +1,166 @@
-
 import Glossary from './glossary';
-import minerModel from './miner-model';
+import MinerModel from './miner-model';
+import { validateFieldParams } from './helpers';
 
-export default class minerGUI  {
-	// TODO: Добавить валидацию входных параметров (количество мин > площади поля, минимум 1 мина, минимум 2x2 поле)
-	constructor(width, height, mines )	{
-		this.width = width;
-		this.height = height;
-		this.mines = mines;
-	};  
+export default class MinerGUI {
+  constructor(width, height, mines) {
+    validateFieldParams(width, height, mines);
+    this.width = width;
+    this.height = height;
+    this.mines = mines;
+    this.model = null;
+  }
 
+  drawWrap() {
+    const wrapper = document.getElementById(Glossary.gameWrapperId);
+    const fieldWidth = this.width * Glossary.cellWidthPx;
+    const widthPx = fieldWidth >= Glossary.wrapperWidthThresholdPx
+      ? fieldWidth + Glossary.wrapperPaddingPx
+      : Glossary.minWrapperWidthPx;
+    wrapper.style.width = `${widthPx}px`;
+  }
 
-	// TODO: Refactor - Магические цифры (21, 240, 250, 20) должны быть связаны с CSS
-	drawWrap()  { 
-      document.getElementById("gameWrapper").style.width = (((this.width*21) >= 240) ? (this.width*21+20) : 250) + "px"
-	}
-
-	// TODO: Refactor - drawField большая функция, должна быть разбита на более мелкие
-	drawField()	{    
-      let model = new minerModel(this.width,this.height,this.mines)
-      let table = createField(this.width,this.height,this.mines, model);
-      if(!document.getElementById("minerField"))  {
-        document.getElementById("gameWrapper").append(table);
-      }
-    else  {
-      document.getElementById("minerField").replaceWith(table);
+  drawField() {
+    this.model = new MinerModel(this.width, this.height, this.mines);
+    const table = this.createFieldTable();
+    const existingField = document.getElementById(Glossary.minerFieldId);
+    const gameWrapper = document.getElementById(Glossary.gameWrapperId);
+    if (!existingField) {
+      gameWrapper.append(table);
+    } else {
+      existingField.replaceWith(table);
     }
+  }
 
-    function createField(width, height, mines, model)  {
-      let table = document.createElement('table');    
-      let rows, cells;
-      table.className = "field";
-      table.id = "minerField";
-      model.convertToModel();    
-
-      for (let i = 0; i < height; i++)  {      
-        rows = table.insertRow(i);
-        rows.id = i;
-        for (let j = 0; j < width; j++) {        
-          cells = rows.insertCell(j);
-          cells.className = "closed"
-          cells.id = j;
-
-          cells.onclick = (event) => leftClick(event, model, mines);
-          cells.oncontextmenu = (event) => rightClick(event, model, mines);
-        }
+  createFieldTable() {
+    const table = document.createElement('table');
+    table.className = Glossary.fieldClassName;
+    table.id = Glossary.minerFieldId;
+    this.model.convertToModel();
+    for (let i = 0; i < this.height; i += 1) {
+      const row = table.insertRow(i);
+      row.id = String(i);
+      for (let j = 0; j < this.width; j += 1) {
+        const cell = row.insertCell(j);
+        cell.className = Glossary.closedCellClassName;
+        cell.id = String(j);
+        cell.onclick = (event) => this.handleLeftClick(event);
+        cell.oncontextmenu = (event) => this.handleRightClick(event);
       }
-      return table;
     }
-    
-    function leftClick(event, model, mines){
-      let cellId = event.target.getAttribute('id');
-      let rowId = event.target.parentNode.getAttribute('id');
-      openCell(rowId,cellId,event.type,model, mines);
-    };
-    
-     function rightClick(event, model, mines){          
-      let cellId = event.target.getAttribute('id');
-      let rowId = event.target.parentNode.getAttribute('id');
-      event.preventDefault();
-      openCell(rowId,cellId,event.type,model, mines);
-    };
-    
-		// TODO: Refactor - openCell функция слишком сложная, должна изолировать подфункции (логика авто-открытия)
-		function openCell(i, j, eventType, model, mines)  {
-      let minesLeft = document.getElementById("minesLeft")
-			let table = document.getElementById('minerField');
-			i = parseInt(i);
-			j = parseInt(j);
-			if (i < 0 || j < 0 || i >= table.rows.length || j >= table.rows[0].cells.length)	{
-				return;
-			}        
-			let clickedCell = table.rows[i].cells[j];
-			if (clickedCell.checked)	{
-				return;
-			}
-			if (!clickedCell.classList.contains(Glossary.flagFieldName) && !clickedCell.classList.contains(Glossary.questionFieldName) && (eventType==='click')) {
-				clickedCell.checked = true;
-				clickedCell.classList.remove("closed");       
-				clickedCell.classList.add("empty");
-				if (Number.isInteger(model.field[i][j]))  {
-					if (model.field[i][j]>0)  {
-						clickedCell.textContent = model.field[i][j];
-					}
-					else {
-						openCell(i+1, j,   'click', model, false);
-						openCell(i+1, j+1, 'click', model, false);
-						openCell(i+1, j-1, 'click', model, false);
-						openCell(i,   j-1, 'click', model, false);
-						openCell(i,   j+1, 'click', model, false);
-						openCell(i-1, j+1, 'click', model, false);
-						openCell(i-1, j-1, 'click', model, false);
-						openCell(i-1, j,   'click', model, false);
-						return;
-					}
-				}
-				else if (model.field[i][j] === Glossary.mineFieldName)  {
-					clickedCell.classList.add(Glossary.bombFieldName);
-          clickedCell.style.color= "black";
-          clickedCell.style.background= "#ff4c5b";
-          gameOver(model);
-					return;
-				}
-			}
-			else if(mines) {
-				if (clickedCell.classList.contains(Glossary.flagFieldName)) {
-					clickedCell.classList.remove("flag");
-					clickedCell.classList.add("question");
-          minesLeft.textContent++;          
-				}
-				else if (clickedCell.classList.contains(Glossary.questionFieldName) && (mines))  {
-					clickedCell.classList.remove("question");
-				}
-				else  { 
-          clickedCell.classList.add("flag");
-          minesLeft.textContent--;         
+    return table;
+  }
+
+  handleLeftClick(event) {
+    const cellId = event.target.getAttribute('id');
+    const rowId = event.target.parentNode.getAttribute('id');
+    this.openCell(rowId, cellId, event.type, false);
+  }
+
+  handleRightClick(event) {
+    const cellId = event.target.getAttribute('id');
+    const rowId = event.target.parentNode.getAttribute('id');
+    event.preventDefault();
+    this.openCell(rowId, cellId, event.type, true);
+  }
+
+  openCell(rowIndex, colIndex, eventType, allowFlagging) {
+    const minesLeft = document.getElementById(Glossary.minesLeftId);
+    const table = document.getElementById(Glossary.minerFieldId);
+    const i = parseInt(rowIndex, 10);
+    const j = parseInt(colIndex, 10);
+    if (i < 0 || j < 0 || i >= table.rows.length || j >= table.rows[0].cells.length) {
+      return;
+    }
+    const clickedCell = table.rows[i].cells[j];
+    if (clickedCell.checked) {
+      return;
+    }
+    if (
+      !clickedCell.classList.contains(Glossary.flagFieldName)
+      && !clickedCell.classList.contains(Glossary.questionFieldName)
+      && eventType === 'click'
+    ) {
+      clickedCell.checked = true;
+      clickedCell.classList.remove(Glossary.closedCellClassName);
+      clickedCell.classList.add(Glossary.emptyCellClassName);
+      const cellValue = this.model.field[i][j];
+      if (Number.isInteger(cellValue)) {
+        if (cellValue > 0) {
+          clickedCell.textContent = cellValue;
+        } else {
+          this.openAdjacentCells(i, j);
+          return;
         }
-			}
-      if (minesLeft.textContent === "0")
-      {          
-        gameOver(false,mines);
-        return;   
+      } else if (cellValue === Glossary.mineFieldName) {
+        clickedCell.classList.add(Glossary.bombFieldName);
+        clickedCell.style.color = 'black';
+        clickedCell.style.background = '#ff4c5b';
+        this.gameOver(this.model);
+        return;
       }
-		}
-    
-    // TODO: Refactor - gameOver функция слишком сложная, логика победы должна быть изолирована
-    function gameOver(model,mines) {
-      let smile = document.getElementById('updateGame');
-      let table = document.getElementById('minerField');
-      let minesLeft = document.getElementById("minesLeft");
-      let cellsLeft = table.rows.length * table.rows[0].cells.length; 
-      for (let i = 0; i < table.rows.length; i++)  { 
-        for (let j = 0; j < table.rows[0].cells.length; j++) {
-          if (model  !== false)  {
-            table.rows[i].cells[j].onclick = null;
-            table.rows[i].cells[j].oncontextmenu = (event) => event.preventDefault(); 
-            if ((mines!==false) && (model.field[i][j] === Glossary.mineFieldName)) {
-              smile.classList.remove('newGame');
-              table.rows[i].cells[j].classList.add(Glossary.bombFieldName);
-              table.rows[i].cells[j].classList.add("empty");
-              smile.classList.add('faleGame');
-            }
-           } 
-          cellsLeft = ((table.rows[i].cells[j].classList.contains("empty")) ? (cellsLeft-1)  : cellsLeft)
-          if ((minesLeft.textContent === "0") &&  (cellsLeft-parseInt(mines) ===  0))  {            
-            smile.classList.remove('newGame');
-            smile.classList.add('winGame');
-            gameOver(true,false)
+    } else if (allowFlagging) {
+      this.toggleCellMark(clickedCell, minesLeft);
+    }
+    if (minesLeft.textContent === '0') {
+      this.gameOver(false, this.mines);
+    }
+  }
+
+  openAdjacentCells(row, col) {
+    this.openCell(row + 1, col, 'click', false);
+    this.openCell(row + 1, col + 1, 'click', false);
+    this.openCell(row + 1, col - 1, 'click', false);
+    this.openCell(row, col - 1, 'click', false);
+    this.openCell(row, col + 1, 'click', false);
+    this.openCell(row - 1, col + 1, 'click', false);
+    this.openCell(row - 1, col - 1, 'click', false);
+    this.openCell(row - 1, col, 'click', false);
+  }
+
+  toggleCellMark(cell, minesLeft) {
+    if (cell.classList.contains(Glossary.flagFieldName)) {
+      cell.classList.remove(Glossary.flagFieldName);
+      cell.classList.add(Glossary.questionFieldName);
+      minesLeft.textContent = String(parseInt(minesLeft.textContent, 10) + 1);
+    } else if (cell.classList.contains(Glossary.questionFieldName)) {
+      cell.classList.remove(Glossary.questionFieldName);
+    } else {
+      cell.classList.add(Glossary.flagFieldName);
+      minesLeft.textContent = String(parseInt(minesLeft.textContent, 10) - 1);
+    }
+  }
+
+  gameOver(model, mines) {
+    const smile = document.getElementById(Glossary.updateGameId);
+    const table = document.getElementById(Glossary.minerFieldId);
+    const minesLeft = document.getElementById(Glossary.minesLeftId);
+    let cellsLeft = table.rows.length * table.rows[0].cells.length;
+    for (let i = 0; i < table.rows.length; i += 1) {
+      for (let j = 0; j < table.rows[0].cells.length; j += 1) {
+        const cell = table.rows[i].cells[j];
+        if (model !== false) {
+          cell.onclick = null;
+          cell.oncontextmenu = (event) => event.preventDefault();
+          if (mines !== false && model.field[i][j] === Glossary.mineFieldName) {
+            smile.classList.remove(Glossary.newGameClassName);
+            cell.classList.add(Glossary.bombFieldName);
+            cell.classList.add(Glossary.emptyCellClassName);
+            smile.classList.add(Glossary.failGameClassName);
           }
         }
+        if (cell.classList.contains(Glossary.emptyCellClassName)) {
+          cellsLeft -= 1;
+        }
+        if (
+          minesLeft.textContent === '0'
+          && cellsLeft - parseInt(mines, 10) === 0
+        ) {
+          smile.classList.remove(Glossary.newGameClassName);
+          smile.classList.add(Glossary.winGameClassName);
+          this.gameOver(true, false);
+        }
       }
     }
-	}
+  }
 }

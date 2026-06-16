@@ -1,62 +1,73 @@
-// TODO: Refactor - Название класса 'game' слишком общее, лучше переименовать
-export default class game {
-  
-  difficultyChange()  {
-    let buttons = document.getElementsByTagName('button');
-    // TODO: Refactor - Неиспользуемые переменные (type, width, height, mines) должны быть удалены
-    let type,width,height,mines;
-    for (let button of buttons) { 
-      button.addEventListener("click",(event) => {
-        if(button.className !== "pressed")  {
-          const unactives = Array.from(buttons)
-          .filter(unactive => (unactive.id!==button.id))
-          button.classList.add("pressed");          
-          for (let uncative of unactives) {
-            uncative.classList.remove("pressed");
-          }        
-          // TODO: BUG - disableCustom лежит в основном скрипте, нужно рефакторить
-          if (typeof disableCustom === 'function') {
-            disableCustom();
-          }
-        }
-      });
-    }
-    let parametres = this.difficultySet();
-    return parametres;
+import { disableCustom, settingsToTuple } from './helpers';
+import Glossary, { DIFFICULTY_SETTINGS } from './glossary';
+
+const DIFFICULTY_BUTTON_IDS = Object.values(Glossary.difficultySettingsNames);
+const boundDifficultyButtons = new WeakSet();
+
+const DIFFICULTY_RESOLVERS = {
+  ...Object.fromEntries(
+    Object.entries(DIFFICULTY_SETTINGS).map(([id, settings]) => [
+      id,
+      () => settingsToTuple(settings),
+    ])
+  ),
+  [Glossary.difficultySettingsNames.custom]: () => settingsToTuple({
+    width: parseInt(document.getElementById(Glossary.widthInputId).value, 10),
+    height: parseInt(document.getElementById(Glossary.heightInputId).value, 10),
+    mines: parseInt(document.getElementById(Glossary.minesInputId).value, 10),
+  }),
+};
+
+function getDifficultyButtons() {
+  return DIFFICULTY_BUTTON_IDS
+    .map((id) => document.getElementById(id))
+    .filter(Boolean);
+}
+
+function handleDifficultyButtonClick(clickedButton) {
+  if (clickedButton.classList.contains(Glossary.pressedButtonClassName)) {
+    return;
   }
-  // TODO: Refactor - Название функции вводит в заблуждение (возвращает значения, а не устанавливает), лучше переименовать в 'getDifficultySettings'
-  difficultySet() {
-    let buttons = document.getElementsByTagName('button');
-    let type,width,height,mines;
-    for (let button of buttons) { 
-      if (button.className === "pressed") {
-        type=button.id
-      } 
+  const buttons = getDifficultyButtons();
+  clickedButton.classList.add(Glossary.pressedButtonClassName);
+  for (const button of buttons) {
+    if (button.id !== clickedButton.id) {
+      button.classList.remove(Glossary.pressedButtonClassName);
     }
-      // TODO: Refactor - Switch case можно заменить на полиморфизм и использовать глоссарий
-      // TODO: Refactor - Хардкод значений сложностей (easy, normal, hard) лучше вынести в конфиг
-      switch(type){
-      case "easy":
-        width = 9;
-        height = 9;
-        mines = 10;
-        break;
-      case "normal":
-        width = 16;
-        height = 16;
-        mines = 40;
-        break;
-      case "hard":
-        width = 30;
-        height = 16;
-        mines = 99;
-        break;
-      case "custom":        
-        width = document.getElementById("widthInput").value;
-        height = document.getElementById("heightInput").value;
-        mines = document.getElementById("minesInput").value;
-        break;
+  }
+  if (typeof disableCustom === 'function') {
+    disableCustom();
+  }
+}
+
+export default class MinesweeperDifficultyManager {
+  bindDifficultyButtons() {
+    for (const button of getDifficultyButtons()) {
+      if (boundDifficultyButtons.has(button)) {
+        continue;
+      }
+      boundDifficultyButtons.add(button);
+      button.addEventListener('click', () => handleDifficultyButtonClick(button));
     }
-    return [width, height, mines];
+  }
+
+  difficultyChange() {
+    this.bindDifficultyButtons();
+    return this.getDifficultySettings();
+  }
+
+  getSelectedDifficultyType() {
+    for (const button of getDifficultyButtons()) {
+      if (button.classList.contains(Glossary.pressedButtonClassName)) {
+        return button.id;
+      }
+    }
+    return undefined;
+  }
+
+  getDifficultySettings() {
+    const type = this.getSelectedDifficultyType();
+    const resolve = DIFFICULTY_RESOLVERS[type];
+    return resolve ? resolve() : [undefined, undefined, undefined];
   }
 }

@@ -1,85 +1,74 @@
-import Glossary from "./glossary";
+import Glossary from './glossary';
+import { validateFieldParams } from './helpers';
 
-export default class minerModel	{
-	
-  // TODO: Добавить валидацию входных параметров (количество мин > площади поля, минимум 1 мина, минимум 2x2 поле)
-	constructor(width, height, mines)	{
-		this.width = width;
-		this.height = height;
-		this.mines = mines;
-		this.field = new Array(height*width).fill(0);
-		this.openedField = [];
-		this.gameFinished = false;
-	}
+export default class MinerModel {
+  constructor(width, height, mines) {
+    validateFieldParams(width, height, mines);
+    this.width = width;
+    this.height = height;
+    this.mines = mines;
+    this.field = null;
+    this.openedField = [];
+    this.gameFinished = false;
+  }
 
-	minesInit(minedField)	{
-		let minesNumber = this.mines;
-		let fieldSpace = this.height*this.width;		
-  		// TODO: BUG - minesInit Баг с бесконечной рекурсией: создаётся `new minesSet()` но minesSet это функция, а не класс		
-  		// TODO: BUG - minesInit не использует параметр minedField корректно - создаёт новый массив вместо использования переданного
-		this.field = new minesSet();
+  placeMinesInLinearField(fieldSize, minesCount) {
+    const available = Array.from({ length: fieldSize }, (_, index) => index);
+    const field = new Array(fieldSize).fill(0);
+    for (let placed = 0; placed < minesCount; placed += 1) {
+      const pick = Math.floor(Math.random() * available.length);
+      const index = available.splice(pick, 1)[0];
+      field[index] = Glossary.mineFieldName;
+    }
+    return field;
+  }
 
-		function minesSet()	{
-			for (let i=0; i<minesNumber; i++)	{
-				let bombInd = parseInt(getRandomArbitrary(0, fieldSpace));
-				if (minedField[bombInd] === 0){
-					minedField[bombInd] = Glossary.mineFieldName;
-					minesNumber -= 1;
-				}
-			}
-			if (minesNumber !== 0) {minesSet();}
+  linearToGrid(linearField, width, height) {
+    const grid = [];
+    for (let row = 0; row < height; row += 1) {
+      grid.push(linearField.slice(row * width, row * width + width));
+    }
+    return grid;
+  }
 
-			function getRandomArbitrary(min, max) {
-				return Math.random() * (max - min) + min;
-			}
-			
-			return minedField;
-		}    
-	}
-  
-  // TODO: Refactor - fieldTransformation не совсем очевидно назначение функции (приведение плоского массива к 2D)
-	fieldTransformation() {
-		this.minesInit(this.field);    
-		for (let i = 0; i < this.height; i++) {
-		  this.field[i] = this.field.slice(i * this.width ,i * this.width + this.width);
-		}
-		this.field.splice(this.height);
-	}
-  
-  //Модель пересчитываем 0 в мины
-  convertToModel()	{
-		this.fieldTransformation();
-		let mineFlag = JSON.parse(JSON.stringify(this.field));
+  computeAdjacentCounts(mineGrid, width, height) {
+    const result = mineGrid.map((row) => [...row]);
+    for (let i = 0; i < height; i += 1) {
+      for (let j = 0; j < width; j += 1) {
+        if (result[i][j] === Glossary.mineFieldName) {
+          continue;
+        }
+        let count = 0;
+        for (let di = -1; di <= 1; di += 1) {
+          for (let dj = -1; dj <= 1; dj += 1) {
+            if (di === 0 && dj === 0) {
+              continue;
+            }
+            const ni = i + di;
+            const nj = j + dj;
+            if (
+              ni >= 0 && ni < height
+              && nj >= 0 && nj < width
+              && mineGrid[ni][nj] === Glossary.mineFieldName
+            ) {
+              count += 1;
+            }
+          }
+        }
+        result[i][j] = count;
+      }
+    }
+    return result;
+  }
 
+  buildMineField() {
+    const linearField = this.placeMinesInLinearField(this.width * this.height, this.mines);
+    const mineGrid = this.linearToGrid(linearField, this.width, this.height);
+    return this.computeAdjacentCounts(mineGrid, this.width, this.height);
+  }
 
-		for (let i = 0; i < this.height; i++)  {
-			mineFlag[i][this.width] = 0;
-			for (let j = 0; j < this.width; j++) {  
-				if (this.field[i][j] === Glossary.mineFieldName) { mineFlag[i][j] = 1;}  
-			}
-		}
-		mineFlag.push(new Array(this.width+1).fill(0));
-
-		for (let i = 0; i < this.height; i++)  {
-			for (let j = 0; j < this.width; j++) {
-				if (this.field[i][j] !== Glossary.mineFieldName)  {
-					if (i === 0)  {
-						if (j === 0)  {
-							this.field[i][j] = mineFlag[i+1][j] + mineFlag[i+1][j+1] + mineFlag[i][j+1]; 
-						}
-						else {
-							this.field[i][j] = mineFlag[i][j-1] + mineFlag[i+1][j-1] + mineFlag[i+1][j] + mineFlag[i+1][j+1] + mineFlag[i][j+1];
-						} 
-					}
-					else if (j === 0) {
-						this.field[i][j] = mineFlag[i-1][j] + mineFlag[i+1][j] + mineFlag[i-1][j+1] + mineFlag[i][j+1] + mineFlag[i+1][j+1]; 
-					}
-					else  {
-						this.field[i][j] = mineFlag[i-1][j-1] + mineFlag[i][j-1] + mineFlag[i+1][j-1] + mineFlag[i-1][j] + mineFlag[i+1][j] + mineFlag[i-1][j+1] + mineFlag[i][j+1] + mineFlag[i+1][j+1];
-					} 
-				}
-			}
-		}    
-	}
-  
+  convertToModel() {
+    this.field = this.buildMineField();
+    return this.field;
+  }
 }

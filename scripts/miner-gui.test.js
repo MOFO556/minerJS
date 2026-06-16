@@ -1,370 +1,263 @@
-import minerGUI from './miner-gui.js';
-import minerModel from './miner-model.js';
+import MinerGUI from './miner-gui.js';
 import Glossary from './glossary.js';
+import { loadIndexHtmlBody } from './test-fixtures.js';
 
-// Константы для тестов, возможно вынести в глоссарий
 const TEST_WIDTH = 5;
 const TEST_HEIGHT = 5;
 const TEST_MINES = 5;
-const TEST_MIN_FIELD_WIDTH = 2;
-const TEST_MIN_FIELD_HEIGHT = 2;
-const TEST_MIN_MINES = 1;
 
-describe('minerGUI', () => {
+function createZeroField(size) {
+  return Array.from({ length: size }, () => Array(size).fill(0));
+}
+
+describe('MinerGUI', () => {
   let gui;
-  let gameWrapper;
-  let updateGame;
-  let minesLeft;
 
   beforeEach(() => {
-    // Настройка DOM элементов
-    gameWrapper = document.createElement('div');
-    gameWrapper.id = 'gameWrapper';
-    document.body.appendChild(gameWrapper);
-
-    updateGame = document.createElement('div');
-    updateGame.id = 'updateGame';
-    updateGame.classList.add('newGame');
-    document.body.appendChild(updateGame);
-
-    minesLeft = document.createElement('div');
-    minesLeft.id = 'minesLeft';
-    minesLeft.textContent = TEST_MINES.toString();
-    document.body.appendChild(minesLeft);
-
-    gui = new minerGUI(TEST_WIDTH, TEST_HEIGHT, TEST_MINES);
+    loadIndexHtmlBody();
+    document.getElementById(Glossary.minesLeftId).textContent = TEST_MINES.toString();
+    gui = new MinerGUI(TEST_WIDTH, TEST_HEIGHT, TEST_MINES);
   });
 
   afterEach(() => {
-    // Очистка DOM
-    if (gameWrapper && gameWrapper.parentNode) {
-      gameWrapper.parentNode.removeChild(gameWrapper);
-    }
-    if (updateGame && updateGame.parentNode) {
-      updateGame.parentNode.removeChild(updateGame);
-    }
-    if (minesLeft && minesLeft.parentNode) {
-      minesLeft.parentNode.removeChild(minesLeft);
-    }
-    const minerField = document.getElementById('minerField');
-    if (minerField && minerField.parentNode) {
-      minerField.parentNode.removeChild(minerField);
-    }
+    document.body.innerHTML = '';
   });
 
   describe('Constructor', () => {
     test('should initialize with provided dimensions and mine count', () => {
-      const testGui = new minerGUI(TEST_WIDTH, TEST_HEIGHT, TEST_MINES);
-      expect(testGui.width).toBe(TEST_WIDTH);
-      expect(testGui.height).toBe(TEST_HEIGHT);
-      expect(testGui.mines).toBe(TEST_MINES);
+      expect(gui.width).toBe(TEST_WIDTH);
+      expect(gui.height).toBe(TEST_HEIGHT);
+      expect(gui.mines).toBe(TEST_MINES);
     });
 
-    // БУДУТ ПАДАТЬ - Сейчас в конструкторе нет валидации
-    test('should not allow mines number greater than field area', () => {
-      const testGui = new minerGUI(3, 3, 10); // 9 ячеек, 10 мин
-      // TODO: Добавить валидацию в конструктор
-      expect(testGui.mines).toBeLessThanOrEqual(testGui.width * testGui.height);
+    test('should reject mines number greater than field area', () => {
+      expect(() => new MinerGUI(3, 3, 10)).toThrow(
+        'Number of mines cannot be greater than field area'
+      );
     });
 
     test('should require at least 1 mine', () => {
-      const testGui = new minerGUI(3, 3, 0);
-      // TODO: Добавить валидацию в конструктор
-      expect(testGui.mines).toBeGreaterThanOrEqual(TEST_MIN_MINES);
+      expect(() => new MinerGUI(3, 3, 0)).toThrow('At least 1 mine is required');
     });
 
     test('should require minimal field size of 2x2', () => {
-      const testGui1 = new minerGUI(1, 4, 1);
-      const testGui2 = new minerGUI(4, 1, 1);
-      const testGui3 = new minerGUI(1, 1, 1);
-      // TODO: Добавить валидацию в конструктор на проверку размера поля
-      expect(testGui1.width).toBeGreaterThanOrEqual(TEST_MIN_FIELD_WIDTH);
-      expect(testGui1.height).toBeGreaterThanOrEqual(TEST_MIN_FIELD_HEIGHT);
-      expect(testGui2.width).toBeGreaterThanOrEqual(TEST_MIN_FIELD_WIDTH);
-      expect(testGui2.height).toBeGreaterThanOrEqual(TEST_MIN_FIELD_HEIGHT);
-      expect(testGui3.width).toBeGreaterThanOrEqual(TEST_MIN_FIELD_WIDTH);
-      expect(testGui3.height).toBeGreaterThanOrEqual(TEST_MIN_FIELD_HEIGHT);
+      expect(() => new MinerGUI(1, 4, 1)).toThrow('Field size must be at least 2x2');
+      expect(() => new MinerGUI(4, 1, 1)).toThrow('Field size must be at least 2x2');
+      expect(() => new MinerGUI(1, 1, 1)).toThrow('Field size must be at least 2x2');
     });
   });
 
   describe('drawWrap', () => {
     test('should set wrapper width based on field width', () => {
-      gui.drawWrap();
-      const expectedWidth = ((TEST_WIDTH * 21) >= 240) ? (TEST_WIDTH * 21 + 20) : 250;
-      expect(gameWrapper.style.width).toBe(expectedWidth + 'px');
+      const gameWrapper = document.getElementById(Glossary.gameWrapperId);
+      const wideGui = new MinerGUI(12, 12, 20);
+      wideGui.drawWrap();
+      const expectedWidth = 12 * Glossary.cellWidthPx + Glossary.wrapperPaddingPx;
+      expect(gameWrapper.style.width).toBe(`${expectedWidth}px`);
     });
 
     test('should use minimum width of 250px for small fields', () => {
-      const smallGui = new minerGUI(5, 5, 3);
+      const gameWrapper = document.getElementById(Glossary.gameWrapperId);
+      const smallGui = new MinerGUI(5, 5, 3);
       smallGui.drawWrap();
-      expect(gameWrapper.style.width).toBe('250px');
+      expect(gameWrapper.style.width).toBe(`${Glossary.minWrapperWidthPx}px`);
     });
 
     test('should calculate width correctly for larger fields', () => {
-      const largeGui = new minerGUI(15, 15, 30);
+      const gameWrapper = document.getElementById(Glossary.gameWrapperId);
+      const largeGui = new MinerGUI(15, 15, 30);
       largeGui.drawWrap();
-      const expectedWidth = 15 * 21 + 20; // 335px
-      expect(gameWrapper.style.width).toBe(expectedWidth + 'px');
-    });
-
-    // TODO: Рефакторинг - Магические числа (21, 240, 250, 20) должны быть связаны с CSS/стилями
-    test('документировать магические числа для рефакторинга', () => {
-      // 21 - ширина ячейки в пикселях
-      // 240 - минимальный порог ширины
-      // 250 - минимальная ширина обёртки
-      // 20 - отступ
-      expect(true).toBe(true);
+      const expectedWidth = 15 * Glossary.cellWidthPx + Glossary.wrapperPaddingPx;
+      expect(gameWrapper.style.width).toBe(`${expectedWidth}px`);
     });
   });
 
   describe('drawField', () => {
-    test.skip('should create and append table to gameWrapper - SKIPPED due to minerModel bug', () => {
+    test('should create and append table to gameWrapper', () => {
+      const gameWrapper = document.getElementById(Glossary.gameWrapperId);
       gui.drawField();
-      const table = document.getElementById('minerField');
+      const table = document.getElementById(Glossary.minerFieldId);
       expect(table).toBeTruthy();
       expect(table.tagName).toBe('TABLE');
       expect(gameWrapper.contains(table)).toBe(true);
     });
 
-    test.skip('should replace existing table if it exists - SKIPPED due to minerModel bug', () => {
+    test('should replace existing table if it exists', () => {
       gui.drawField();
-      const firstTable = document.getElementById('minerField');
+      const firstTable = document.getElementById(Glossary.minerFieldId);
       gui.drawField();
-      const secondTable = document.getElementById('minerField');
+      const secondTable = document.getElementById(Glossary.minerFieldId);
       expect(firstTable).not.toBe(secondTable);
-      expect(gameWrapper.contains(secondTable)).toBe(true);
     });
 
-    test.skip('should create correct number of rows and cells - SKIPPED due to minerModel bug', () => {
+    test('should create correct number of rows and cells', () => {
       gui.drawField();
-      const table = document.getElementById('minerField');
+      const table = document.getElementById(Glossary.minerFieldId);
       expect(table.rows.length).toBe(TEST_HEIGHT);
       expect(table.rows[0].cells.length).toBe(TEST_WIDTH);
     });
 
-    test.skip('should set correct class and id on table - SKIPPED due to minerModel bug', () => {
+    test('should set correct class and id on table', () => {
       gui.drawField();
-      const table = document.getElementById('minerField');
-      expect(table.className).toBe('field');
-      expect(table.id).toBe('minerField');
+      const table = document.getElementById(Glossary.minerFieldId);
+      expect(table.className).toBe(Glossary.fieldClassName);
+      expect(table.id).toBe(Glossary.minerFieldId);
     });
 
-    test.skip('should initialize all cells as closed - SKIPPED due to minerModel bug', () => {
+    test('should initialize all cells as closed', () => {
       gui.drawField();
-      const table = document.getElementById('minerField');
-      for (let i = 0; i < table.rows.length; i++) {
-        for (let j = 0; j < table.rows[0].cells.length; j++) {
-          expect(table.rows[i].cells[j].classList.contains('closed')).toBe(true);
+      const table = document.getElementById(Glossary.minerFieldId);
+      for (let i = 0; i < table.rows.length; i += 1) {
+        for (let j = 0; j < table.rows[0].cells.length; j += 1) {
+          expect(table.rows[i].cells[j].classList.contains(Glossary.closedCellClassName)).toBe(true);
         }
       }
     });
 
-    test.skip('should attach click handlers to cells - SKIPPED due to minerModel bug', () => {
+    test('should attach click handlers to cells', () => {
       gui.drawField();
-      const table = document.getElementById('minerField');
-      const cell = table.rows[0].cells[0];
+      const cell = document.getElementById(Glossary.minerFieldId).rows[0].cells[0];
       expect(cell.onclick).toBeTruthy();
       expect(cell.oncontextmenu).toBeTruthy();
     });
-
-    // TODO: Рефакторинг - drawField слишком большая, нужно разбить на меньшие функции
-    test('документировать необходимость рефакторинга drawField', () => {
-      expect(true).toBe(true);
-    });
   });
 
-  describe('Взаимодействие с ячейками (leftClick/rightClick/openCell)', () => {
+  describe('openCell', () => {
     beforeEach(() => {
-      // Пропускаем создание поля из-за бага minerModel, вручную создаём таблицу для тестов
-      const table = document.createElement('table');
-      table.id = 'minerField';
-      table.className = 'field';
-      gameWrapper.appendChild(table);
-
-      for (let i = 0; i < TEST_HEIGHT; i++) {
-        const row = table.insertRow(i);
-        row.id = i.toString();
-        for (let j = 0; j < TEST_WIDTH; j++) {
-          const cell = row.insertCell(j);
-          cell.className = 'closed';
-          cell.id = j.toString();
-        }
-      }
+      gui.drawField();
     });
 
-    describe('openCell', () => {
-      test('не должен открывать ячейки за пределами поля', () => {
-        const table = document.getElementById('minerField');
-        const cell = table.rows[0].cells[0];
-        
-        // Это вызывается внутренне, но мы не можем протестировать напрямую без полного drawField
-        expect(cell.classList.contains('closed')).toBe(true);
-      });
+    test('should not open cells outside the field', () => {
+      const cell = document.getElementById(Glossary.minerFieldId).rows[0].cells[0];
+      gui.openCell(-1, 0, 'click', false);
+      expect(cell.classList.contains(Glossary.closedCellClassName)).toBe(true);
+    });
 
-      test.skip('не должен открывать уже открытые ячейки - ПРОПУЩЕНО из-за деталей реализации', () => {
-        const table = document.getElementById('minerField');
-        const cell = table.rows[0].cells[0];
-        cell.checked = true;
-        // После установки checked, ячейка не должна открываться повторно
-        expect(cell.checked).toBe(true);
-      });
+    test('should not reopen already checked cells', () => {
+      const cell = document.getElementById(Glossary.minerFieldId).rows[0].cells[0];
+      gui.model.field = createZeroField(TEST_WIDTH);
+      gui.model.field[0][0] = 1;
+      gui.openCell(0, 0, 'click', false);
+      cell.textContent = 'stale';
+      gui.openCell(0, 0, 'click', false);
+      expect(cell.textContent).toBe('stale');
+    });
 
-      test.skip('должен открывать ячейку по левому клику и показывать число - ПРОПУЩЕНО из-за бага minerModel', () => {
-        const table = document.getElementById('minerField');
-        const model = new minerModel(TEST_WIDTH, TEST_HEIGHT, TEST_MINES);
-        // Ручная настройка модели для теста
-        model.field = [
-          [1, 0, 0, 0, 0],
-          [0, 0, 0, 0, 0],
-          [0, 0, 0, 0, 0],
-          [0, 0, 0, 0, 0],
-          [0, 0, 0, 0, 0]
-        ];
-        const cell = table.rows[0].cells[0];
-        // После клика ячейка должна открыться и показать число
-        expect(cell.classList.contains('closed')).toBe(true);
-      });
+    test('should open a numbered cell on left click', () => {
+      gui.model.field = createZeroField(TEST_WIDTH);
+      gui.model.field[0][0] = 2;
+      gui.openCell(0, 0, 'click', false);
+      const cell = document.getElementById(Glossary.minerFieldId).rows[0].cells[0];
+      expect(cell.textContent).toBe('2');
+      expect(cell.classList.contains(Glossary.emptyCellClassName)).toBe(true);
+    });
 
-      test.skip('должен добавить класс bomb и вызвать gameOver при нажатии на мину - ПРОПУЩЕНО из-за бага minerModel', () => {
-        const table = document.getElementById('minerField');
-        const model = new minerModel(TEST_WIDTH, TEST_HEIGHT, TEST_MINES);
-        // Ручная настройка модели с миной
-        model.field = [
-          [Glossary.mineFieldName, 0, 0, 0, 0],
-          [0, 0, 0, 0, 0],
-          [0, 0, 0, 0, 0],
-          [0, 0, 0, 0, 0],
-          [0, 0, 0, 0, 0]
-        ];
-        const cell = table.rows[0].cells[0];
-        // После клика на мину должен быть добавлен класс bomb
-        expect(cell.classList.contains('closed')).toBe(true);
-      });
+    test('should reveal a bomb and trigger loss on mine click', () => {
+      gui.model.field = createZeroField(TEST_WIDTH);
+      gui.model.field[0][0] = Glossary.mineFieldName;
+      gui.openCell(0, 0, 'click', false);
+      const cell = document.getElementById(Glossary.minerFieldId).rows[0].cells[0];
+      const smile = document.getElementById(Glossary.updateGameId);
+      expect(cell.classList.contains(Glossary.bombFieldName)).toBe(true);
+      expect(smile.classList.contains(Glossary.failGameClassName)).toBe(true);
+    });
 
-      test.skip('должен циклически переключать флаг/вопрос/пусто при правом клике - ПРОПУЩЕНО из-за бага minerModel', () => {
-        const table = document.getElementById('minerField');
-        const cell = table.rows[0].cells[0];
-        // Первый правый клик - флаг
-        expect(cell.classList.contains('closed')).toBe(true);
-        // Второй правый клик - вопрос
-        // Третий правый клик - пусто
-      });
+    test('should cycle flag, question, and empty on right click', () => {
+      const cell = document.getElementById(Glossary.minerFieldId).rows[0].cells[0];
+      gui.openCell(0, 0, 'contextmenu', true);
+      expect(cell.classList.contains(Glossary.flagFieldName)).toBe(true);
+      gui.openCell(0, 0, 'contextmenu', true);
+      expect(cell.classList.contains(Glossary.questionFieldName)).toBe(true);
+      gui.openCell(0, 0, 'contextmenu', true);
+      expect(cell.classList.contains(Glossary.flagFieldName)).toBe(false);
+      expect(cell.classList.contains(Glossary.questionFieldName)).toBe(false);
+    });
 
-      test.skip('должен уменьшать minesLeft при установке флага - ПРОПУЩЕНО из-за бага minerModel', () => {
-        const table = document.getElementById('minerField');
-        const cell = table.rows[0].cells[0];
-        const initialMinesLeft = parseInt(minesLeft.textContent);
-        // После установки флага счётчик должен уменьшиться
-        expect(minesLeft.textContent).toBe(initialMinesLeft.toString());
-      });
+    test('should decrease minesLeft when placing a flag', () => {
+      const minesLeft = document.getElementById(Glossary.minesLeftId);
+      gui.openCell(0, 0, 'contextmenu', true);
+      expect(minesLeft.textContent).toBe(String(TEST_MINES - 1));
+    });
 
-      test.skip('должен автоматически открывать соседние ячейки когда ячейка равна нулю - ПРОПУЩЕНО из-за бага minerModel', () => {
-        const table = document.getElementById('minerField');
-        const model = new minerModel(TEST_WIDTH, TEST_HEIGHT, TEST_MINES);
-        // Ручная настройка модели с пустой областью
-        model.field = [
-          [0, 0, 0, 0, 0],
-          [0, 0, 0, 0, 0],
-          [0, 0, 0, 0, 0],
-          [0, 0, 0, 0, 0],
-          [0, 0, 0, 0, 0]
-        ];
-        const cell = table.rows[0].cells[0];
-        // При открытии ячейки с 0 должны открыться все соседние
-        expect(cell.classList.contains('closed')).toBe(true);
-      });
-
-      // TODO: Рефакторинг - функция openCell слишком сложная, нужно выделить подфункции (логика автооткрытия)
-      test('документировать необходимость рефакторинга openCell', () => {
-        expect(true).toBe(true);
-      });
+    test('should flood open adjacent cells when zero is clicked', () => {
+      gui.model.field = createZeroField(TEST_WIDTH);
+      gui.openCell(0, 0, 'click', false);
+      const table = document.getElementById(Glossary.minerFieldId);
+      for (let i = 0; i < table.rows.length; i += 1) {
+        for (let j = 0; j < table.rows[0].cells.length; j += 1) {
+          expect(table.rows[i].cells[j].classList.contains(Glossary.emptyCellClassName)).toBe(true);
+        }
+      }
     });
   });
 
   describe('gameOver', () => {
     beforeEach(() => {
-      const table = document.createElement('table');
-      table.id = 'minerField';
-      table.className = 'field';
-      gameWrapper.appendChild(table);
-
-      for (let i = 0; i < TEST_HEIGHT; i++) {
-        const row = table.insertRow(i);
-        row.id = i.toString();
-        for (let j = 0; j < TEST_WIDTH; j++) {
-          const cell = row.insertCell(j);
-          cell.className = 'closed';
-          cell.id = j.toString();
-        }
-      }
+      gui.drawField();
     });
 
-    test.skip('должен удалить обработчики кликов при окончании игры - ПРОПУЩЕНО из-за деталей реализации', () => {
-      const table = document.getElementById('minerField');
-      const cell = table.rows[0].cells[0];
-      // После gameOver обработчики должны быть удалены
+    test('should remove click handlers when game ends', () => {
+      gui.gameOver(gui.model);
+      const cell = document.getElementById(Glossary.minerFieldId).rows[0].cells[0];
       expect(cell.onclick).toBeNull();
-      expect(cell.oncontextmenu).toBeNull();
+      expect(cell.oncontextmenu).toBeTruthy();
     });
 
-    test.skip('должен показать все мины при проигрыше - ПРОПУЩЕНО из-за бага minerModel', () => {
-      const table = document.getElementById('minerField');
-      const model = new minerModel(TEST_WIDTH, TEST_HEIGHT, TEST_MINES);
-      // Ручная настройка модели с минами
-      model.field = [
-        [Glossary.mineFieldName, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0]
+    test('should reveal all mines on loss', () => {
+      gui.model.field = createZeroField(TEST_WIDTH);
+      gui.model.field[0][0] = Glossary.mineFieldName;
+      gui.model.field[2][2] = Glossary.mineFieldName;
+      gui.gameOver(gui.model, gui.mines);
+      const table = document.getElementById(Glossary.minerFieldId);
+      expect(table.rows[0].cells[0].classList.contains(Glossary.bombFieldName)).toBe(true);
+      expect(table.rows[2].cells[2].classList.contains(Glossary.bombFieldName)).toBe(true);
+    });
+
+    test('should switch smile to fail state on loss', () => {
+      gui.model.field = createZeroField(TEST_WIDTH);
+      gui.model.field[0][0] = Glossary.mineFieldName;
+      gui.gameOver(gui.model, gui.mines);
+      const smile = document.getElementById(Glossary.updateGameId);
+      expect(smile.classList.contains(Glossary.failGameClassName)).toBe(true);
+      expect(smile.classList.contains(Glossary.newGameClassName)).toBe(false);
+    });
+
+    test('should switch smile to win state when board is solved', () => {
+      const smallGui = new MinerGUI(2, 2, 1);
+      smallGui.drawField();
+      smallGui.model.field = [
+        [Glossary.mineFieldName, 1],
+        [1, 0],
       ];
-      // При проигрыше все мины должны быть показаны
-      expect(table.rows[0].cells[0].classList.contains(Glossary.bombFieldName)).toBe(false);
-    });
-
-    test.skip('должен изменить смайл на faleGame при проигрыше - ПРОПУЩЕНО из-за бага minerModel', () => {
-      // При проигрыше класс смайла должен измениться
-      expect(updateGame.classList.contains('newGame')).toBe(true);
-      expect(updateGame.classList.contains('faleGame')).toBe(false);
-    });
-
-    test.skip('должен изменить смайл на winGame при победе - ПРОПУЩЕНО из-за бага minerModel', () => {
-      // При победе класс смайла должен измениться
-      expect(updateGame.classList.contains('newGame')).toBe(true);
-      expect(updateGame.classList.contains('winGame')).toBe(false);
-    });
-
-    test.skip('должен определять победу когда все не минные ячейки открыты - ПРОПУЩЕНО из-за бага minerModel', () => {
-      const table = document.getElementById('minerField');
-        // Когда все не минные ячейки открыты и флаги расставлены правильно - победа
-        expect(minesLeft.textContent).toBe(TEST_MINES.toString());
-      });
-
-    // TODO: Рефакторинг - функция gameOver сложная, логика определения победы должна быть выделена
-    test('документировать необходимость рефакторинга gameOver', () => {
-      expect(true).toBe(true);
+      const table = document.getElementById(Glossary.minerFieldId);
+      table.rows[0].cells[0].classList.add(Glossary.flagFieldName);
+      table.rows[0].cells[1].classList.add(Glossary.emptyCellClassName);
+      table.rows[1].cells[0].classList.add(Glossary.emptyCellClassName);
+      table.rows[1].cells[1].classList.add(Glossary.emptyCellClassName);
+      document.getElementById(Glossary.minesLeftId).textContent = '0';
+      smallGui.gameOver(false, 1);
+      const smile = document.getElementById(Glossary.updateGameId);
+      expect(smile.classList.contains(Glossary.winGameClassName)).toBe(true);
     });
   });
 
   describe('Integration tests', () => {
-    test.skip('должен обрабатывать полный игровой процесс - ПРОПУЩЕНО из-за бага minerModel', () => {
-      // Тест полного процесса игры от начала до конца
-        expect(true).toBe(true);
-      });
+    test('should handle left click through cell handler', () => {
+      gui.drawField();
+      gui.model.field = createZeroField(TEST_WIDTH);
+      gui.model.field[1][1] = 1;
+      const cell = document.getElementById(Glossary.minerFieldId).rows[1].cells[1];
+      cell.onclick({ target: cell, type: 'click' });
+      expect(cell.textContent).toBe('1');
+    });
 
-    test.skip('должен обрабатывать установку флагов правым кликом - ПРОПУЩЕНО из-за бага minerModel', () => {
-      // Тест механики установки флагов
-        expect(true).toBe(true);
-      });
-
-    test.skip('должен обрабатывать сценарий победы - ПРОПУЩЕНО из-за бага minerModel', () => {
-      // Тест победы в игре
-        expect(true).toBe(true);
-      });
-
-    test.skip('должен обрабатывать сценарий поражения - ПРОПУЩЕНО из-за бага minerModel', () => {
-      // Тест поражения в игре
-        expect(true).toBe(true);
-      });
+    test('should handle right click through cell handler', () => {
+      gui.drawField();
+      const cell = document.getElementById(Glossary.minerFieldId).rows[1].cells[1];
+      const event = { target: cell, type: 'contextmenu', preventDefault: jest.fn() };
+      cell.oncontextmenu(event);
+      expect(cell.classList.contains(Glossary.flagFieldName)).toBe(true);
+      expect(event.preventDefault).toHaveBeenCalled();
+    });
   });
 });

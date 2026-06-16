@@ -1,58 +1,60 @@
 'use strict';
 import './style.css';
-import minerGUI from './scripts/miner-gui'
-import game from './scripts/game'
+import MinerGUI from './scripts/miner-gui';
+import MinesweeperDifficultyManager from './scripts/game';
 import {
-  countMines,
-  hideInfo
-} from './scripts/helpers'
+  bindCustomInputValidation,
+  disableCustom,
+  hideInfo,
+  resolveDifficultyParameters,
+} from './scripts/helpers';
+import Glossary from './scripts/glossary';
 
+function refreshGame() {
+  const manager = new MinesweeperDifficultyManager();
+  manager.difficultyChange();
+  const [width, height, mines] = manager.getDifficultySettings();
+  const resolution = resolveDifficultyParameters(width, height, mines);
 
-
-function disableCustom()  {
-  let parametres = document.getElementsByTagName("input");
-  for (let parametre of parametres) {
-    if (document.getElementById("custom").classList.contains("pressed"))  {
-      parametre.disabled = false;
-    }
-    else {
-      parametre.disabled = true;
-    }
+  if (!resolution.ok) {
+    console.error(`[Minesweeper] ${resolution.message}`);
+    return;
   }
-}
 
-function refreshGame(event)  {
-  let newgame = new game();
-  let parametres = newgame.difficultyChange();
-  let mines = countMines(parametres[0],parametres[1],parametres[2]);
-  let GUI = new minerGUI(parametres[0],parametres[1],mines);
+  resolution.warnings.forEach((warning) => {
+    console.warn(`[Minesweeper] ${warning}`);
+  });
+
+  const GUI = new MinerGUI(resolution.width, resolution.height, resolution.mines);
   GUI.drawWrap();
   GUI.drawField();
-  let minesLeft = document.getElementById("minesLeft");
-  minesLeft.textContent = mines;
-  let smile = document.getElementById("updateGame");
-  if (smile.classList.contains('winGame')) {
-    smile.classList.remove('winGame');
-    smile.classList.add('newGame');
-  }
-  else if (smile.classList.contains('faleGame')) {
-    smile.classList.remove('faleGame');
-    smile.classList.add('newGame');
+
+  const minesLeft = document.getElementById(Glossary.minesLeftId);
+  minesLeft.textContent = resolution.mines;
+
+  const smile = document.getElementById(Glossary.updateGameId);
+  if (smile.classList.contains(Glossary.winGameClassName)) {
+    smile.classList.remove(Glossary.winGameClassName);
+    smile.classList.add(Glossary.newGameClassName);
+  } else if (smile.classList.contains(Glossary.failGameClassName)) {
+    smile.classList.remove(Glossary.failGameClassName);
+    smile.classList.add(Glossary.newGameClassName);
   }
 }
 
-document.addEventListener("DOMContentLoaded",(event) => {
-	refreshGame();
-	disableCustom();
-	let smile = document.getElementById("updateGame");
-	smile.onclick = (event) => refreshGame(event);
-	let infoButton =  document.getElementById("infoButton");
-	infoButton.onclick = function(){
-			let infoBlock =  document.getElementById("infoBlock")
-			if (infoBlock.style.display === "none") {
-				infoBlock.style.display = "block";
-				let infoText =  document.getElementById("infoText")
-        infoText.addEventListener("click",hideInfo,true);
-			}       
-		}
+document.addEventListener('DOMContentLoaded', () => {
+  bindCustomInputValidation();
+  refreshGame();
+  disableCustom();
+  const smile = document.getElementById(Glossary.updateGameId);
+  smile.onclick = () => refreshGame();
+  const infoButton = document.getElementById(Glossary.infoButtonId);
+  infoButton.onclick = function () {
+    const infoBlock = document.getElementById(Glossary.infoBlockId);
+    if (infoBlock.style.display === 'none') {
+      infoBlock.style.display = 'block';
+      const infoText = document.getElementById(Glossary.infoTextId);
+      infoText.addEventListener('click', hideInfo, true);
+    }
+  };
 });
