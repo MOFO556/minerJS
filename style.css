@@ -213,7 +213,7 @@
   color: green;  
 }
 
-.faleGame:after {
+.failGame:after {
   content: '\1F635';
   color: red; 
 }

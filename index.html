@@ -17,9 +17,9 @@
       <div class="gameUpdate newGame" id="updateGame"></div>
 	</div>
 	<div class="menu">
-		<input placeholder="width" type="number" onkeypress="if (this.value.length > 1) return false;" id="widthInput">
-		<input placeholder="height" type="number" onkeypress="if (this.value.length > 1) return false;" id="heightInput">
-		<input placeholder="mines" type="number" onkeypress="if (this.value.length > 2) return false;" id="minesInput">
+		<input placeholder="width" type="number" min="2" max="99" id="widthInput">
+		<input placeholder="height" type="number" min="2" max="99" id="heightInput">
+		<input placeholder="mines" type="number" min="1" max="999" id="minesInput">
 		<button id="custom">Custom</button>
 	</div>
     <div class="menu" id="inlineWrapper">
@@ -40,7 +40,7 @@
       <div class="closeblock"></div>    
       <p>Для старта новой игры:
         <br>Выберите сложность и нажмите на мордашку</p>
-      <p>При пользовательских настройках необходимо очищать поля</p>
+      <p>При пользовательских настройках заполните ширину, высоту и число мин</p>
     </div>
 
   </div>  
