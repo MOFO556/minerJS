@@ -25,6 +25,11 @@ describe('helpers', () => {
     test('should strip non-digit characters', () => {
       expect(formatBoundedNumericInput('1e2', { max: 99, maxDigits: 2 })).toBe('12');
     });
+
+    test('should drop exponent-only input', () => {
+      expect(formatBoundedNumericInput('e', { max: 99, maxDigits: 2 })).toBe('');
+      expect(formatBoundedNumericInput('E', { max: 99, maxDigits: 2 })).toBe('');
+    });
   });
   describe('parsePositiveInt', () => {
     test('should parse valid positive integers', () => {

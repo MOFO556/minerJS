@@ -24,6 +24,11 @@ export function formatBoundedNumericInput(value, { max, maxDigits }) {
 }
 
 export function bindBoundedNumericInput(input, { min, max, maxDigits }) {
+  input.addEventListener('keydown', (event) => {
+    if (['e', 'E', '+', '-', '.'].includes(event.key)) {
+      event.preventDefault();
+    }
+  });
   input.addEventListener('input', () => {
     const formatted = formatBoundedNumericInput(input.value, { max, maxDigits });
     if (input.value !== formatted) {
